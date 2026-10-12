@@ -1,8 +1,13 @@
+import { mediasAtom } from '@/atoms/medias-atom';
 import { Media } from '@/types/media';
+import { Host, Icon } from '@expo/ui';
 import { isAvailableAsync, shareAsync } from 'expo-sharing';
+import { useSetAtom } from 'jotai';
 import { Alert, Image, TouchableOpacity, View } from 'react-native';
 
 const MediaCard = ({ media }: { media: Media }) => {
+  const setMedias = useSetAtom(mediasAtom);
+
   async function shareImage() {
     const isAvailable = await isAvailableAsync();
     if (!isAvailable) {
@@ -22,6 +27,10 @@ const MediaCard = ({ media }: { media: Media }) => {
       {
         text: 'Delete',
         style: 'destructive',
+        onPress: () =>
+          setMedias((medias) =>
+            medias.filter((mediaItem) => mediaItem.id !== media.id),
+          ),
       },
       {
         text: 'Cancel',
@@ -46,6 +55,21 @@ const MediaCard = ({ media }: { media: Media }) => {
           className="size-full"
         />
       </TouchableOpacity>
+
+      {media.type === 'video' && (
+        <View className="absolute right-2 top-2 size-8 items-center justify-center rounded-full bg-black/60">
+          <Host matchContents>
+            <Icon
+              name={Icon.select({
+                ios: 'play.fill',
+                android: import('@expo/material-symbols/play_arrow.xml'),
+              })}
+              size={17}
+              color="#fff"
+            />
+          </Host>
+        </View>
+      )}
     </View>
   );
 };
