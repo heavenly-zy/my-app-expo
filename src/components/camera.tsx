@@ -1,20 +1,22 @@
 import { photosAtom } from '@/atoms/photos-atom';
 import { checkPhotoReminderAtom } from '@/atoms/reminder-atom';
+import CameraActionButton from '@/components/camera-action-button';
+import CameraFaceSwitch from '@/components/camera-face-switch';
+import CameraModeSwitch from '@/components/camera-mode-switch';
+import Spinner from '@/components/spinner';
 import { useCamera } from '@/hooks/use-camera';
 import { usePicture } from '@/hooks/use-picture';
-import { Host, Icon } from '@expo/ui';
-import { CameraView, useMicrophonePermissions } from 'expo-camera';
+import { useVideo } from '@/hooks/use-video';
+import { CameraView } from 'expo-camera';
 import * as Crypto from 'expo-crypto';
 import { router } from 'expo-router';
 import { useAtom, useSetAtom } from 'jotai';
 import { cssInterop } from 'nativewind';
-import { ComponentProps, ComponentType, RefAttributes, useState } from 'react';
+import { ComponentProps, ComponentType, RefAttributes } from 'react';
 import {
   Alert,
   Button,
-  Pressable,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -43,7 +45,16 @@ export default function Camera() {
     cameraPermission,
     requestCameraPermission,
   } = usePicture();
-  
+
+  const {
+    isRecording,
+    setIsRecording,
+    microphonePermission,
+    requestMicrophonePermission,
+    recordMinute,
+    recordSecond,
+  } = useVideo();
+
   const isCameraDisabled = !isCameraReady || isTakingPhoto;
 
   const setPhotos = useSetAtom(photosAtom);
@@ -88,10 +99,6 @@ export default function Camera() {
       setIsTakingPhoto(false);
     }
   }
-
-  const [isRecording, setIsRecording] = useState(false);
-  const [microphonePermission, requestMicrophonePermission] =
-    useMicrophonePermissions();
 
   async function handleRecordVideo() {
     if (!cameraViewRef.current || !isCameraReady) {
@@ -139,7 +146,7 @@ export default function Camera() {
 
   if (!cameraPermission) {
     // Camera permissions are still loading.
-    return <View />;
+    return <Spinner />;
   }
 
   if (!cameraPermission.granted) {
@@ -163,91 +170,40 @@ export default function Camera() {
         ref={cameraViewRef}
         mode={cameraMode}
         autofocus="on"
+        videoQuality="2160p"
       />
+
+      {/* Video Record Time */}
+      {isRecording && (
+        <View className="absolute top-16 items-center left-0 right-0 px-4 py-3">
+          <Text className="font-semibold text-white">
+            🎥
+            {recordMinute.toString().padStart(2, '0')}:
+            {recordSecond.toString().padStart(2, '0')}
+          </Text>
+        </View>
+      )}
+
       {/* Camera Switch Button */}
-      <TouchableOpacity
-        className="absolute top-16 right-4 rounded-full bg-black/50 px-4 py-3"
-        onPress={toggleCameraFacing}
-        disabled={isRecording}
-      >
-        <Text className="font-semibold text-white">Switch Camera</Text>
-      </TouchableOpacity>
+      <CameraFaceSwitch
+        toggleCameraFacing={toggleCameraFacing}
+        isRecording={isRecording}
+      />
 
       {/* Camera Mode Toggle */}
-      <View className="absolute bottom-44 w-full items-center">
-        <View className="flex-row gap-1 rounded-full bg-black/60 p-1">
-          {/* Toggle to take picture */}
-          <Pressable
-            pointerEvents="box-only"
-            onPress={() => setCameraMode('picture')}
-            disabled={isRecording}
-            className={`size-12 items-center justify-center rounded-full ${cameraMode === 'picture' ? 'bg-white' : ''}`}
-          >
-            <Host matchContents>
-              <Icon
-                name={Icon.select({
-                  ios: 'camera.fill',
-                  android: import('@expo/material-symbols/photo_camera.xml'),
-                })}
-                size={24}
-                color={cameraMode === 'picture' ? 'black' : 'white'}
-              />
-            </Host>
-          </Pressable>
-
-          {/* Toggle to record video */}
-          <Pressable
-            pointerEvents="box-only"
-            disabled={isRecording}
-            onPress={() => setCameraMode('video')}
-            className={`size-12 items-center justify-center rounded-full ${cameraMode === 'video' ? 'bg-white' : ''}`}
-          >
-            <Host matchContents>
-              <Icon
-                name={Icon.select({
-                  ios: 'video.fill',
-                  android: import('@expo/material-symbols/videocam.xml'),
-                })}
-                size={25}
-                color={cameraMode === 'video' ? 'black' : 'white'}
-              />
-            </Host>
-          </Pressable>
-        </View>
-      </View>
+      <CameraModeSwitch
+        cameraMode={cameraMode}
+        setCameraMode={setCameraMode}
+        isRecording={isRecording}
+      />
 
       {/* Action Button */}
-      <View className="absolute bottom-16 w-full items-center">
-        <Pressable
-          className={`items-center justify-center border-4 border-white bg-black/30 p-1 size-20 rounded-full ${isCameraDisabled ? 'opacity-50' : ''}`}
-          pointerEvents="box-only"
-          disabled={isCameraDisabled}
-          onPress={handleAction}
-        >
-          {cameraMode === 'picture' && (
-            <View className="size-full items-center justify-center rounded-full bg-white">
-              <Host matchContents>
-                <Icon
-                  name={Icon.select({
-                    ios: 'camera.fill',
-                    android: import('@expo/material-symbols/photo_camera.xml'),
-                  })}
-                  size={28}
-                  color="black"
-                />
-              </Host>
-            </View>
-          )}
-
-          {cameraMode === 'video' && (
-            <View
-              className={`bg-red-500 
-                ${isRecording ? ' size-8 rounded-lg ' : ' size-full rounded-full'}
-                  `}
-            ></View>
-          )}
-        </Pressable>
-      </View>
+      <CameraActionButton
+        isCameraDisabled={isCameraDisabled}
+        handleAction={handleAction}
+        cameraMode={cameraMode}
+        isRecording={isRecording}
+      />
     </View>
   );
 }
