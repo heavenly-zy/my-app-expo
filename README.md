@@ -47,6 +47,27 @@ pnpm android --device
 
 该命令会自动生成缺失的 Android 工程、编译 debug 版本并启动 Metro。
 
+## EAS 云端构建
+
+在项目根目录登录并构建 Android 测试包：
+
+```sh
+npx eas-cli@latest login
+# 首次接入时执行，当前项目已配置，可跳过
+npx eas-cli@latest build:configure
+# 生成可独立运行的 APK
+npx eas-cli@latest build --platform android --profile preview
+```
+
+按需选择其他构建：
+
+```sh
+# 开发包：安装后按下文「日常开发」连接 Metro
+npx eas-cli@latest build --platform android --profile development
+# 商店包：生成 AAB，用于提交 Google Play
+npx eas-cli@latest build --platform android --profile production
+```
+
 ## 日常开发
 
 开发构建已安装后，仅修改 JS/TS 或样式时，启动 Metro 即可：
