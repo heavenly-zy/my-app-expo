@@ -18,6 +18,15 @@ export default function RootLayout() {
             statusBarStyle: 'light',
           }}
         />
+        <Stack.Screen
+          name="video-preview"
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'fade',
+            contentStyle: { backgroundColor: '#000' },
+            statusBarStyle: 'light',
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );

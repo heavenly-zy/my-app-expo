@@ -60,14 +60,11 @@ const MediaCard = ({ media }: { media: Media }) => {
     >
       <Pressable
         className="size-full"
-        onPress={
-          media.type === 'image'
-            ? () =>
-                router.push({
-                  pathname: '/image-preview',
-                  params: { id: media.id },
-                })
-            : undefined
+        onPress={() =>
+          router.push({
+            pathname: media.type === 'image' ? '/image-preview' : '/video-preview',
+            params: { id: media.id },
+          })
         }
         onLongPress={handleLongPress}
       >
