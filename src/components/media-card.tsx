@@ -2,9 +2,14 @@ import { mediasAtom } from '@/atoms/medias-atom';
 import { useMedia } from '@/hooks/use-media';
 import { Media } from '@/types/media';
 import { Host, Icon } from '@expo/ui';
+import { Image as ExpoImage } from 'expo-image';
+import { router } from 'expo-router';
 import { isAvailableAsync, shareAsync } from 'expo-sharing';
 import { useSetAtom } from 'jotai';
-import { Alert, Image, TouchableOpacity, View } from 'react-native';
+import { cssInterop } from 'nativewind';
+import { Alert, Image, Pressable, View } from 'react-native';
+
+const StyledImage = cssInterop(ExpoImage, { className: 'style' });
 
 const MediaCard = ({ media }: { media: Media }) => {
   const setMedias = useSetAtom(mediasAtom);
@@ -53,16 +58,41 @@ const MediaCard = ({ media }: { media: Media }) => {
       key={media.id}
       className="bg-zinc-200 dark:bg-zinc-800 rounded-2xl overflow-hidden aspect-square mb-3 w-[48.5%]"
     >
-      <TouchableOpacity onLongPress={handleLongPress}>
-        <Image
-          source={{ uri: media.uri }}
-          resizeMode="cover"
-          className="size-full"
-        />
-      </TouchableOpacity>
+      <Pressable
+        className="size-full"
+        onPress={
+          media.type === 'image'
+            ? () =>
+                router.push({
+                  pathname: '/image-preview',
+                  params: { id: media.id },
+                })
+            : undefined
+        }
+        onLongPress={handleLongPress}
+      >
+        {media.type === 'image' ? (
+          <StyledImage
+            source={{ uri: media.uri }}
+            contentFit="cover"
+            recyclingKey={media.id}
+            transition={150}
+            className="size-full"
+          />
+        ) : (
+          <Image
+            source={{ uri: media.uri }}
+            resizeMode="cover"
+            className="size-full"
+          />
+        )}
+      </Pressable>
 
       {media.type === 'video' && (
-        <View className="absolute right-2 top-2 size-8 items-center justify-center rounded-full bg-black/60">
+        <View
+          pointerEvents="none"
+          className="absolute right-2 top-2 size-8 items-center justify-center rounded-full bg-black/60"
+        >
           <Host matchContents>
             <Icon
               name={Icon.select({
